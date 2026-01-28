@@ -746,7 +746,7 @@
     <!-- JavaScript -->
     <script>
         // ==================== CONFIG ====================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyvljqLUEqHXoysx3Ng9gATbHvAYbx1MsMUli1xUfRSwqyqbbxpj8OQWj3QwVJvhrKs/exec'; // Cole sua URL do Google Apps Script aqui
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyNxxf1gsWgUsUejPX8w-uljFGOJujNvt9vANKMPl_GjKfIGFqyicWurtw99bmknu7p/exec'; // Cole sua URL do Google Apps Script aqui
         let currentPlayer = null;
         let drawnNumbersList = [];
         let autoUpdateInterval = null;
@@ -777,6 +777,45 @@
                 showAdminPanel();
             } else if (cardId) {
                 loadPlayerCard(cardId);
+            }
+        }
+
+        async function loadPlayerCard(cardId) {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_URL}?action=buscarJogador&id=${cardId}`);
+                const data = await response.json();
+                
+                if (data.erro) {
+                    showToast(data.erro, 'error');
+                    return;
+                }
+                
+                currentPlayer = data;
+                displayPlayerCard({
+                    id: data.id,
+                    cartela: data.cartela,
+                    pixCode: data.pixCode || 'PIX_CODE_AQUI',
+                    valor: CONFIG.VALOR_CARTELA
+                });
+                
+                // Atualizar status
+                const statusBadge = document.getElementById('playerStatus');
+                if (data.pago === 'SIM') {
+                    statusBadge.textContent = 'Pagamento Confirmado ✓';
+                    statusBadge.className = 'status-badge status-active';
+                } else {
+                    statusBadge.textContent = 'Aguardando Pagamento';
+                    statusBadge.className = 'status-badge status-pending';
+                }
+                
+                showToast('Cartela carregada com sucesso!', 'success');
+                
+            } catch (error) {
+                showToast('Erro ao carregar cartela. Verifique o ID.', 'error');
+                console.error(error);
+            } finally {
+                showLoading(false);
             }
         }
 
